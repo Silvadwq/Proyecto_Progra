@@ -1,6 +1,9 @@
 import csv
+import pandas as pd
+import statsmodels.formula.api as smf
+from sklearn.model_selection import train_test_split
 
-def cargar_dator():
+def cargar_datos():
     Base_de_Datos = []
     with open("trafico_5_cruces_2024Q1.csv", mode='r', encoding='utf-8') as f:
             for row in csv.DictReader(f):
@@ -15,7 +18,8 @@ def cargar_dator():
                         float(row['ocupacion']),
                         int(row['accidentes']),
                         float(row['precipitacion_mm']),
-                        float(row['visibilidad_km'])
+                        float(row['visibilidad_km']),
+                        str(row['clima']),
                         ]
                     Base_de_Datos.append(datos)
                 except (ValueError, KeyError):
@@ -56,19 +60,48 @@ def validar_Hora(dato):
      while dato < 0 or dato > 23:
           dato = int(input("El dato tiene que ser mayor a 0: "))
      return dato
-     
+
+######################################      Modelo  #########################
+def cargar_modelo():
+
+    datos = pd.read_csv("trafico_5_cruces_2024Q1.csv")
+    d_hora = pd.get_dummies(datos["hora"], prefix="hora", dtype=int).drop(columns="hora_0")
+    d_dia = pd.get_dummies(datos["dia_semana"], prefix="dia", dtype=int).drop(columns="dia_0")
+    d_clima = pd.get_dummies(datos["clima"], prefix="clima", dtype=int).drop(columns="clima_Parcialmente nublado")
+    tabla = pd.concat([datos[["precipitacion_mm", "vehiculos"]], d_hora, d_dia, d_clima], axis=1)
+    entrenamiento, test = train_test_split(tabla, test_size=0.2, random_state=42)
+    variables = [c for c in entrenamiento.columns if c != "vehiculos"]
+    formula = "vehiculos ~ " + " + ".join('Q("' + c + '")' for c in variables)
+    modelo = smf.ols(formula=formula, data=entrenamiento).fit()
+    return modelo, modelo.resid.std()
+
+
+def esperado(modelo, hora, dia, lluvia, clima):
+    total = modelo.params["Intercept"]
+    total = total + modelo.params['Q("precipitacion_mm")'] * lluvia
+    if hora != 0:
+        total = total + modelo.params['Q("hora_' + str(hora) + '")']
+    if dia != 0:
+        total = total + modelo.params['Q("dia_' + str(dia) + '")']
+    if clima != "Parcialmente nublado":
+        total = total + modelo.params['Q("clima_' + clima + '")']
+    return total
+      
 
 def main():
     print("Este programa en base a una base de datos permite a un semaforo tomar decisiones")
-    Base_de_Datos = cargar_dator()
+    Base_de_Datos = cargar_datos()
     visibilidad,precipitacion = clima_adverso(Base_de_Datos)
-    
+    modelo, desviacion = cargar_modelo()
+
     visibilidadCarretera = float(input("Cual es la visibilidad de la carretera: "))
     precipitacionCarretera = float(input("Cual es la precipitacion de la carretera: "))
     congestionCarretera = int(input("Cuanto coches hay en la carretera: "))
     velocidadCarretera = float(input("Cual es la velocidad promedio de los carros (km/h): "))
     horaCarretera = int(input("Que hora es: "))
+    diaCarretera = int(input("Que dia en numero es: "))
     cruzeCarretera = input("En que cruze estas: ")
+    climaCarretera = input("Que clima hay: ")
 
     velocidadCarretera = validar_Datos_Mayores_0(velocidadCarretera)
     visibilidadCarretera = validar_Datos_Mayores_0(visibilidadCarretera)
@@ -89,4 +122,12 @@ def main():
             print("Recomendacion: Extender el tiempo de luz verde (+15s) en el semaforo.")
         elif congestionCarretera > promedio_autos:
             print(f"Hay mas carros de lo normal ({promedio_autos:.1f}), pero el trafico fluye a buena velocidad.")
+
+    exp = esperado(modelo, horaCarretera, diaCarretera, precipitacionCarretera, climaCarretera)
+    if congestionCarretera > exp + 2 * desviacion:
+        print("Congestion anormal, se esperaban unos", round(exp))
+    elif congestionCarretera < exp - 2 * desviacion:
+        print("Lectura sospechosa, posible falla del sensor")
+    else:
+        print("Trafico normal, se esperaban unos", round(exp))
 main()
