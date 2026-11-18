@@ -31,19 +31,29 @@ def clima_adverso(Base_de_Datos):
      promedio_visibilidad = promedio_visibilidad/len(Base_de_Datos)
      promedio_precipitacion = promedio_precipitacion/len(Base_de_Datos)
      return promedio_visibilidad,promedio_precipitacion
-    
+
+def congestionAutos(Base_de_Datos):
+    promedio_autos = 0
+    for i in range(len(Base_de_Datos)):
+        promedio_autos += Base_de_Datos[i][4]
+    promedio_autos = promedio_autos /len(Base_de_Datos)
+    return promedio_autos
      
 
 def main():
     print("Este programa en base a una base de datos permite a un semaforo tomar decisiones")
     Base_de_Datos = cargar_dator()
     visibilidad,precipitacion = clima_adverso(Base_de_Datos)
+    congestion = congestionAutos(Base_de_Datos)
 
     visibilidadCarretera = float(input("Cual es la visibilidad de la carretera: "))
     precipitacionCarretera = float(input("Cual es la precipitacion de la carretera: "))
+    congestionCarretera = int(input("Cuanto coches hay en la carretera: "))
 
     if visibilidadCarretera < visibilidad:
-         print(f"Cuidado hay mas niebla de lo normal, el promedio es de {visibilidad}")
+         print(f"Cuidado hay mas niebla de lo normal, el promedio de bisivilidad es de {visibilidad:.2f}")
     if precipitacionCarretera > precipitacion:
-         print(f"Cuidado esta lloviendo mas fuerte de lo normal, el promedio es de {precipitacion} ")
+         print(f"Cuidado esta lloviendo mas fuerte de lo normal, el promedio es de {precipitacion:.2f} ")
+    if congestionCarretera > congestion:
+         print("Hay mas carros que lo usual")
 main()
