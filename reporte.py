@@ -32,26 +32,48 @@ def clima_adverso(Base_de_Datos):
      promedio_precipitacion = promedio_precipitacion/len(Base_de_Datos)
      return promedio_visibilidad,promedio_precipitacion
 
-def congestionAutos(Base_de_Datos):
+def congestionAutos(Base_de_Datos,hora,cruze):
     promedio_autos = 0
+    contador = 0
     for i in range(len(Base_de_Datos)):
-        promedio_autos += Base_de_Datos[i][4]
-    promedio_autos = promedio_autos /len(Base_de_Datos)
+        if hora == Base_de_Datos[i][1] and cruze == Base_de_Datos[i][3]:
+            promedio_autos += Base_de_Datos[i][4]
+            contador += 1
+    if contador == 0:
+         print("No se encontro ese cruze")
+    promedio_autos = promedio_autos / contador
     return promedio_autos
+
+def validar_Datos_Mayores_0(dato):
+     while dato < 0:
+          dato = float(input("El dato tiene que ser mayor a 0: "))
+     return dato
+def validar_Hora(dato):
+     while dato < 0 and dato > 23:
+          dato = float(input("El dato tiene que ser mayor a 0: "))
+     return dato
      
 
 def main():
     print("Este programa en base a una base de datos permite a un semaforo tomar decisiones")
     Base_de_Datos = cargar_dator()
     visibilidad,precipitacion = clima_adverso(Base_de_Datos)
-    congestion = congestionAutos(Base_de_Datos)
-
+    
     visibilidadCarretera = float(input("Cual es la visibilidad de la carretera: "))
     precipitacionCarretera = float(input("Cual es la precipitacion de la carretera: "))
     congestionCarretera = int(input("Cuanto coches hay en la carretera: "))
+    horaCarretera = int(input("Que hora es: "))
+    cruzeCarretera = input("En que cruze estas: ")
+
+    visibilidadCarretera = validar_Datos_Mayores_0(visibilidadCarretera)
+    precipitacionCarretera = validar_Datos_Mayores_0(precipitacionCarretera)
+    congestionCarretera = validar_Datos_Mayores_0(congestionCarretera)
+    horaCarretera = validar_Hora(horaCarretera)
+
+    congestion = congestionAutos(Base_de_Datos,horaCarretera,cruzeCarretera)
 
     if visibilidadCarretera < visibilidad:
-         print(f"Cuidado hay mas niebla de lo normal, el promedio de bisivilidad es de {visibilidad:.2f}")
+         print(f"Cuidado hay mas niebla de lo normal, el promedio de visivilidad es de {visibilidad:.2f}")
     if precipitacionCarretera > precipitacion:
          print(f"Cuidado esta lloviendo mas fuerte de lo normal, el promedio es de {precipitacion:.2f} ")
     if congestionCarretera > congestion:
