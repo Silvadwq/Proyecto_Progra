@@ -41,6 +41,7 @@ def congestionAutos(Base_de_Datos,hora,cruze):
             contador += 1
     if contador == 0:
          print("No se encontro ese cruze")
+         return 0
     promedio_autos = promedio_autos / contador
     return promedio_autos
 
@@ -49,7 +50,7 @@ def validar_Datos_Mayores_0(dato):
           dato = float(input("El dato tiene que ser mayor a 0: "))
      return dato
 def validar_Hora(dato):
-     while dato < 0 and dato > 23:
+     while dato < 0 or dato > 23:
           dato = float(input("El dato tiene que ser mayor a 0: "))
      return dato
      
