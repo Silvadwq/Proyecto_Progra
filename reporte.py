@@ -53,7 +53,6 @@ def cargar_modelo():
     formula = "vehiculos ~ " + " + ".join('Q("' + c + '")' for c in variables)
     modelo = smf.ols(formula=formula, data=entrenamiento).fit()
     return modelo, modelo.resid.std()
-    return modelo, modelo.resid.std()
 
 
 def esperado(modelo, hora, dia, lluvia, clima):
@@ -87,6 +86,6 @@ def main():
 
 main()
 
-
+    
 
 
