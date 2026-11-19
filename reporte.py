@@ -64,6 +64,17 @@ def validar_Hora(dato):
      while dato < 0 or dato > 23:
           dato = int(input("El dato tiene que ser mayor a 0: "))
      return dato
+def validar_cruze(cruze):
+    cruces = ["Jl. Sudirman - Bundaran HI", "Jl. Thamrin - Monas", "Jl. Rasuna Said - Setiabudi", "Jl. Satrio - Mega Kuningan", "Jl. Jend. Gatot Subroto - Slipi"]
+    while not cruze in cruces:
+        cruzeCarretera = input("El cruze que habias escrito es incorrecto: ")
+    return cruzeCarretera
+def validar_clima(clima):
+    climas = ["Parcialmente nublado", "Nublado", "Lluvia ligera", "Lluvia moderada", "Lluvia intensa", "Tormenta", "Niebla"]
+    while not clima in climas:
+        climaCarretera = input("El clima que habias escrito es incorrecto que clima hay: ")
+    return climaCarretera
+
 
 ######################################      Modelo  #########################
 def cargar_modelo():
@@ -113,6 +124,8 @@ def main():
     precipitacionCarretera = validar_Datos_Mayores_0(precipitacionCarretera)
     congestionCarretera = validar_Datos_Mayores_0(congestionCarretera)
     horaCarretera = validar_Hora(horaCarretera)
+    cruzeCarretera = validar_cruze(cruzeCarretera)
+    climaCarretera = validar_clima(climaCarretera)
 
     promedio_autos, promedio_velocidad = congestionAutos(Base_de_Datos, horaCarretera, cruzeCarretera)
 
