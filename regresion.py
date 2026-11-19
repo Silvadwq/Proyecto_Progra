@@ -8,6 +8,7 @@ Original file is located at
 """
 
 import pandas as pd
+import matplotlib.pyplot as plt
 
 trafico = pd.read_csv("trafico_5_cruces_2024Q1.csv")
 
@@ -54,3 +55,16 @@ modelo=smf.ols(formula=('vehiculos ~ precipitacion_mm + ocupacion + '
     'Q("clima_Lluvia ligera") + Q("clima_Lluvia moderada") + Q("clima_Lluvia intensa") + '
     'Q("clima_Niebla") + Q("clima_Nublado") + Q("clima_Tormenta")'),data=entrenamiento).fit()
 print(modelo.summary())
+
+predicciones = modelo.predict(test)
+
+plt.figure(figsize=(7, 6))
+plt.scatter(test["vehiculos"], predicciones, alpha=0.3, label='Predicciones')
+plt.plot([0, 260], [0, 260], color='red', linestyle='--', label='Predicción perfecta')
+plt.title('Regresión Lineal: Vehículos Reales vs. Predichos (Test)')
+plt.xlabel('Vehículos reales')
+plt.ylabel('Vehículos predichos por el modelo')
+plt.grid(True, alpha=0.3)
+plt.legend()
+plt.tight_layout()
+plt.show()

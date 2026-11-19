@@ -2,6 +2,7 @@ import csv
 import pandas as pd
 import statsmodels.formula.api as smf
 from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
 
 def cargar_datos():
     Base_de_Datos = []
@@ -162,6 +163,49 @@ def alertas(Base_de_Datos, modelo, desviacion, visibilidadCarretera, precipitaci
             print("Alerta critica")
     return alerta
 
+def graficar_perfil_hora(Base_de_Datos, cruze, hora_actual, autos_actuales):
+    horas = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24]
+    promedios = []
+    for h in horas:
+        prom_autos, _ = congestionAutos(Base_de_Datos, h, cruze)
+        promedios.append(prom_autos)
+
+    plt.figure(figsize=(9, 4))
+    plt.plot(horas, promedios, marker='o', label='Promedio histórico')
+    plt.scatter([hora_actual], [autos_actuales], color='red', s=100, zorder=5, label='Lectura actual')
+    plt.title(f'Tráfico promedio por hora en {cruze}')
+    plt.xlabel('Hora del día')
+    plt.ylabel('Vehículos por hora')
+    plt.xticks(horas)
+    plt.grid(True, alpha=0.3)
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+def graficar_volumen_velocidad(Base_de_Datos, cruze):
+    veh_norm, vel_norm = [], []
+    veh_acc, vel_acc = [], []
+
+    for fila in Base_de_Datos:
+        if fila[3] == cruze:
+            if fila[7] == 1:  # accidentes == 1
+                veh_acc.append(fila[4])
+                vel_acc.append(fila[5])
+            else:
+                veh_norm.append(fila[4])
+                vel_norm.append(fila[5])
+
+    plt.figure(figsize=(8, 5))
+    plt.scatter(veh_norm, vel_norm, alpha=0.3, label='Sin accidente')
+    plt.scatter(veh_acc, vel_acc, color='red', s=50, label='Con accidente')
+    plt.title(f'Volumen vs. Velocidad en {cruze}')
+    plt.xlabel('Vehículos por hora')
+    plt.ylabel('Velocidad promedio (km/h)')
+    plt.grid(True, alpha=0.3)
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
 def main():
     print("Este programa en base a una base de datos permite a un semaforo tomar decisiones")
     Base_de_Datos = cargar_datos()
@@ -196,5 +240,8 @@ def main():
     print("\n--- INFORME FUTURO ---")
     hora_final = min(horaCarretera + 1, 23)
     informe_futuro(Base_de_Datos, modelo, diaCarretera, horaCarretera, hora_final, cruzeCarretera, climaCarretera)
+
+    graficar_perfil_hora(Base_de_Datos, cruzeCarretera, horaCarretera, congestionCarretera)
+    graficar_volumen_velocidad(Base_de_Datos, cruzeCarretera)
 
 main()
