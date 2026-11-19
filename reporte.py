@@ -27,13 +27,17 @@ def cargar_datos():
     return Base_de_Datos
 
 def clima_adverso(Base_de_Datos,hora):
+     contador = 0
      promedio_precipitacion = 0
      promedio_visibilidad = 0
      for i in range(len(Base_de_Datos)):
-        promedio_precipitacion += Base_de_Datos[i][8]
-        promedio_visibilidad += Base_de_Datos[i][9]
-     promedio_visibilidad = promedio_visibilidad/len(Base_de_Datos)
-     promedio_precipitacion = promedio_precipitacion/len(Base_de_Datos)
+        if hora == Base_de_Datos[i][1]:
+            contador += 1
+            promedio_precipitacion += Base_de_Datos[i][8]
+            promedio_visibilidad += Base_de_Datos[i][9]
+     promedio_visibilidad = promedio_visibilidad/contador
+     promedio_precipitacion = promedio_precipitacion/contador
+
      return promedio_visibilidad,promedio_precipitacion
 
 def congestionAutos(Base_de_Datos,hora,cruze):
