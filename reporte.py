@@ -26,7 +26,7 @@ def cargar_datos():
                      print("No cargo bien")
     return Base_de_Datos
 
-def clima_adverso(Base_de_Datos):
+def clima_adverso(Base_de_Datos,hora):
      promedio_precipitacion = 0
      promedio_visibilidad = 0
      for i in range(len(Base_de_Datos)):
@@ -89,6 +89,7 @@ def esperado(modelo, hora, dia, lluvia, clima):
       
 
 def main():
+    alerta = 0
     print("Este programa en base a una base de datos permite a un semaforo tomar decisiones")
     Base_de_Datos = cargar_datos()
     visibilidad,precipitacion = clima_adverso(Base_de_Datos)
@@ -112,8 +113,11 @@ def main():
     promedio_autos, promedio_velocidad = congestionAutos(Base_de_Datos, horaCarretera, cruzeCarretera)
 
     if visibilidadCarretera < visibilidad:
+         alerta += 1
          print(f"Cuidado hay mas niebla de lo normal, el promedio de visivilidad es de {visibilidad:.2f}")
+
     if precipitacionCarretera > precipitacion:
+         alerta += 1
          print(f"Cuidado esta lloviendo mas fuerte de lo normal, el promedio es de {precipitacion:.2f} ")
 
     if promedio_autos > 0:
@@ -130,4 +134,15 @@ def main():
         print("Lectura sospechosa, posible falla del sensor")
     else:
         print("Trafico normal, se esperaban unos", round(exp))
+
+
+    match alerta:
+        case 1:
+            print("Cuidado")
+        case 2:
+            print("Que el semaforo dure menos en verde")
+        case 3:
+            print("Que el semaforo dure mas en rojo")
+        case _:
+            print("Error")
 main()
