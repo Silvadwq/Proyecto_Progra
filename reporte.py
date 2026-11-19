@@ -173,5 +173,6 @@ def main():
                 print("Que el semaforo dure mas en rojo")
             case _:
                 print("Alerta critica")
-    print(mensaje)
+    if mensaje:
+        print("Alertas registradas por el operador:", mensaje)
 main()
