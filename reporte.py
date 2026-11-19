@@ -106,11 +106,63 @@ def esperado(modelo, hora, dia, lluvia, clima):
     if clima != "Parcialmente nublado":
         total = total + modelo.params['Q("clima_' + clima + '")']
     return total
-      
+###############################Fin modelo #######################
+def informe_futuro(Base_de_Datos, modelo, dia, hora_inicial, hora_final, cruze, clima):
+    print(f"Informe del dia {dia} de {hora_inicial}:00 a {hora_final}:00 en {cruze}:")
+    total = 0
+    for hora in range(hora_inicial, hora_final + 1):
+        visibilidad, lluvia_normal = clima_adverso(Base_de_Datos, hora, cruze)
+        promedio_autos, promedio_velocidad = congestionAutos(Base_de_Datos, hora, cruze)
+        exp = esperado(modelo, hora, dia, lluvia_normal, clima)
+        if promedio_autos > 0 and exp > promedio_autos:
+            print(f"Hora {hora}: se esperan {round(exp)} carros, mas de lo usual ({promedio_autos:.0f}).")
+        else:
+            print(f"Hora {hora}: se esperan {round(exp)} carros, trafico normal (usual {promedio_autos:.0f}).")
+        total += exp
+    print(f"Total esperado de {hora_inicial}:00 a {hora_final}:00 = {round(total)} carros")
+
+def alertas(Base_de_Datos, modelo, desviacion, visibilidadCarretera, precipitacionCarretera, congestionCarretera, velocidadCarretera, horaCarretera, diaCarretera, cruzeCarretera, climaCarretera):
+    alerta = 0
+    promedio_autos, promedio_velocidad = congestionAutos(Base_de_Datos, horaCarretera, cruzeCarretera)
+    visibilidad, precipitacion = clima_adverso(Base_de_Datos, horaCarretera, cruzeCarretera)
+
+    if visibilidadCarretera < visibilidad:
+        alerta += 1
+        print(f"Cuidado hay mas niebla de lo normal, el promedio de visivilidad es de {visibilidad:.2f}")
+
+    if precipitacionCarretera > precipitacion:
+        alerta += 1
+        print(f"Cuidado esta lloviendo mas fuerte de lo normal, el promedio es de {precipitacion:.2f} ")
+
+    if promedio_autos > 0:
+        if congestionCarretera > promedio_autos and velocidadCarretera < promedio_velocidad:
+            print(f"Alerta de congestion: hay mas carros de lo normal ({promedio_autos:.1f}) y van mas lento de lo usual ({promedio_velocidad:.1f} km/h).")
+            print("Recomendacion: Extender el tiempo de luz verde (+15s) en el semaforo.")
+        elif congestionCarretera > promedio_autos:
+            print(f"Hay mas carros de lo normal ({promedio_autos:.1f}), pero el trafico fluye a buena velocidad.")
+
+    exp = esperado(modelo, horaCarretera, diaCarretera, precipitacionCarretera, climaCarretera)
+    if congestionCarretera > exp + 2 * desviacion:
+        print("Congestion anormal, se esperaban unos", round(exp))
+    elif congestionCarretera < exp - 2 * desviacion:
+        print("Lectura sospechosa, posible falla del sensor")
+    else:
+        print("Trafico normal, se esperaban unos", round(exp))
+
+    match alerta:
+        case 0:
+            print("Condiciones normales, mantener horario habitual del semaforo.")
+        case 1:
+            print("Cuidado")
+        case 2:
+            print("Que el semaforo dure menos en verde")
+        case 3:
+            print("Que el semaforo dure mas en rojo")
+        case _:
+            print("Alerta critica")
+    return alerta
 
 def main():
-    alerta = 0
-    mensaje = []
     print("Este programa en base a una base de datos permite a un semaforo tomar decisiones")
     Base_de_Datos = cargar_datos()
     modelo, desviacion = cargar_modelo()
@@ -132,47 +184,17 @@ def main():
     cruzeCarretera = validar_cruze(cruzeCarretera)
     climaCarretera = validar_clima(climaCarretera)
     diaCarretera = validar_Dia(diaCarretera)
-    promedio_autos, promedio_velocidad = congestionAutos(Base_de_Datos, horaCarretera, cruzeCarretera)
-    visibilidad,precipitacion = clima_adverso(Base_de_Datos,horaCarretera,cruzeCarretera)
 
-    if visibilidadCarretera < visibilidad:
-         alerta += 1
-         print(f"Cuidado hay mas niebla de lo normal, el promedio de visivilidad es de {visibilidad:.2f}")
+    print("\n--- EVALUACION ACTUAL ---")
+    nivel_alerta = alertas(
+        Base_de_Datos, modelo, desviacion,
+        visibilidadCarretera, precipitacionCarretera,
+        congestionCarretera, velocidadCarretera,
+        horaCarretera, diaCarretera, cruzeCarretera, climaCarretera
+    )
 
-    if precipitacionCarretera > precipitacion:
-         alerta += 1
-         print(f"Cuidado esta lloviendo mas fuerte de lo normal, el promedio es de {precipitacion:.2f} ")
+    print("\n--- INFORME FUTURO ---")
+    hora_final = min(horaCarretera + 1, 23)
+    informe_futuro(Base_de_Datos, modelo, diaCarretera, horaCarretera, hora_final, cruzeCarretera, climaCarretera)
 
-    if promedio_autos > 0:
-        if congestionCarretera > promedio_autos and velocidadCarretera < promedio_velocidad:
-            print(f"Alerta de congestion: hay mas carros de lo normal ({promedio_autos:.1f}) y van mas lento de lo usual ({promedio_velocidad:.1f} km/h).")
-            print("Recomendacion: Extender el tiempo de luz verde (+15s) en el semaforo.")
-        elif congestionCarretera > promedio_autos:
-            print(f"Hay mas carros de lo normal ({promedio_autos:.1f}), pero el trafico fluye a buena velocidad.")
-
-    exp = esperado(modelo, horaCarretera, diaCarretera, precipitacionCarretera, climaCarretera)
-    if congestionCarretera > exp + 2 * desviacion:
-        print("Congestion anormal, se esperaban unos", round(exp))
-    elif congestionCarretera < exp - 2 * desviacion:
-        print("Lectura sospechosa, posible falla del sensor")
-    else:
-        print("Trafico normal, se esperaban unos", round(exp))
-
-    if input("Tiene el usuario algo urgente que mencionar, una alerta(s/n): ") == "s":
-        mensaje.append(input("Cual es el mensaje o lo que tiene que registrar"))
-        alerta +=1
-
-    match alerta:
-            case 0:
-                print("Condiciones normales, mantener horario habitual del semaforo.")
-            case 1:
-                print("Cuidado")
-            case 2:
-                print("Que el semaforo dure menos en verde")
-            case 3:
-                print("Que el semaforo dure mas en rojo")
-            case _:
-                print("Alerta critica")
-    if mensaje:
-        print("Alertas registradas por el operador:", mensaje)
 main()
