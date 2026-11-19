@@ -110,6 +110,7 @@ def esperado(modelo, hora, dia, lluvia, clima):
 
 def main():
     alerta = 0
+    mensaje = []
     print("Este programa en base a una base de datos permite a un semaforo tomar decisiones")
     Base_de_Datos = cargar_datos()
     modelo, desviacion = cargar_modelo()
@@ -157,6 +158,10 @@ def main():
     else:
         print("Trafico normal, se esperaban unos", round(exp))
 
+    if input("Tiene el usuario algo urgente que mencionar, una alerta(s/n): ") == "s":
+        mensaje.append(input("Cual es el mensaje o lo que tiene que registrar"))
+        alerta +=1
+
     match alerta:
             case 0:
                 print("Condiciones normales, mantener horario habitual del semaforo.")
@@ -168,4 +173,5 @@ def main():
                 print("Que el semaforo dure mas en rojo")
             case _:
                 print("Alerta critica")
+    print(mensaje)
 main()
