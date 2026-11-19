@@ -62,19 +62,24 @@ def validar_Datos_Mayores_0(dato):
      return dato
 def validar_Hora(dato):
      while dato < 0 or dato > 23:
-          dato = int(input("El dato tiene que ser mayor a 0: "))
+          dato = int(input("La hora debe estar entre 0 y 23:"))
      return dato
-def validar_cruze(cruze):
+def validar_cruze(dato):
     cruces = ["Jl. Sudirman - Bundaran HI", "Jl. Thamrin - Monas", "Jl. Rasuna Said - Setiabudi", "Jl. Satrio - Mega Kuningan", "Jl. Jend. Gatot Subroto - Slipi"]
-    while not cruze in cruces:
-        cruzeCarretera = input("El cruze que habias escrito es incorrecto: ")
-    return cruzeCarretera
-def validar_clima(clima):
-    climas = ["Parcialmente nublado", "Nublado", "Lluvia ligera", "Lluvia moderada", "Lluvia intensa", "Tormenta", "Niebla"]
-    while not clima in climas:
-        climaCarretera = input("El clima que habias escrito es incorrecto que clima hay: ")
-    return climaCarretera
+    while dato not in cruces:
+        dato = input("El cruce es incorrecto, ingrésalo de nuevo: ")
+    return dato
 
+def validar_clima(dato):
+    climas = ["Parcialmente nublado", "Nublado", "Lluvia ligera", "Lluvia moderada", "Lluvia intensa", "Tormenta", "Niebla"]
+    while dato not in climas:
+        dato = input("El clima es incorrecto, ingrésalo de nuevo: ")
+    return dato
+
+def validar_Dia(dato):
+    while dato < 0 or dato > 6:
+        dato = int(input("El dia debe estar entre 0 (lunes) y 6 (domingo): "))
+    return dato
 
 ######################################      Modelo  #########################
 def cargar_modelo():
@@ -107,7 +112,6 @@ def main():
     alerta = 0
     print("Este programa en base a una base de datos permite a un semaforo tomar decisiones")
     Base_de_Datos = cargar_datos()
-    visibilidad,precipitacion = clima_adverso(Base_de_Datos)
     modelo, desviacion = cargar_modelo()
 
     visibilidadCarretera = float(input("Cual es la visibilidad de la carretera: "))
@@ -126,8 +130,9 @@ def main():
     horaCarretera = validar_Hora(horaCarretera)
     cruzeCarretera = validar_cruze(cruzeCarretera)
     climaCarretera = validar_clima(climaCarretera)
-
+    diaCarretera = validar_Dia(diaCarretera)
     promedio_autos, promedio_velocidad = congestionAutos(Base_de_Datos, horaCarretera, cruzeCarretera)
+    visibilidad,precipitacion = clima_adverso(Base_de_Datos,horaCarretera,cruzeCarretera)
 
     if visibilidadCarretera < visibilidad:
          alerta += 1
@@ -152,14 +157,15 @@ def main():
     else:
         print("Trafico normal, se esperaban unos", round(exp))
 
-
     match alerta:
-        case 1:
-            print("Cuidado")
-        case 2:
-            print("Que el semaforo dure menos en verde")
-        case 3:
-            print("Que el semaforo dure mas en rojo")
-        case _:
-            print("Error")
+            case 0:
+                print("Condiciones normales, mantener horario habitual del semaforo.")
+            case 1:
+                print("Cuidado")
+            case 2:
+                print("Que el semaforo dure menos en verde")
+            case 3:
+                print("Que el semaforo dure mas en rojo")
+            case _:
+                print("Alerta critica")
 main()
