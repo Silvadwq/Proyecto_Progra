@@ -26,12 +26,12 @@ def cargar_datos():
                      print("No cargo bien")
     return Base_de_Datos
 
-def clima_adverso(Base_de_Datos,hora):
+def clima_adverso(Base_de_Datos,hora,cruze):
      contador = 0
      promedio_precipitacion = 0
      promedio_visibilidad = 0
      for i in range(len(Base_de_Datos)):
-        if hora == Base_de_Datos[i][1]:
+        if hora == Base_de_Datos[i][1] and cruze == Base_de_Datos[i][3]:
             contador += 1
             promedio_precipitacion += Base_de_Datos[i][8]
             promedio_visibilidad += Base_de_Datos[i][9]
