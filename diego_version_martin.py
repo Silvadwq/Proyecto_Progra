@@ -1,3 +1,10 @@
+"""
+Hecho por Diego Yael Silva(), Martín Alejandro Mosquera, José Manuel Ramirez
+
+
+
+"""
+
 import csv
 import pandas as pd
 import statsmodels.formula.api as smf
