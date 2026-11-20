@@ -27,6 +27,34 @@ def cargar_datos():
                      print("No cargo bien")
     return Base_de_Datos
 
+################################Menu#####################
+def menu():
+    print()
+    print("=" * 52)
+    print("|" + "SISTEMA DE ANALISIS DE TRAFICO".center(50) + "|")
+    print("=" * 52)
+    print("|" + " " * 50 + "|")
+    print("|" + "  1.  Informe actual (alertas y graficas)".ljust(50) + "|")
+    print("|" + "  2.  Prediccion de las proximas 2 horas".ljust(50) + "|")
+    print("|" + "  3.  Registrar una observacion (ej. accidente)".ljust(50) + "|")
+    print("|" + "  4.  Salir".ljust(50) + "|")
+    print("|" + " " * 50 + "|")
+    print("=" * 52)
+
+    opcion = input("Elige una opcion (1-4): ").strip()
+    while opcion not in ["1", "2", "3", "4"]:
+        opcion = input("Opcion invalida, escribe un numero del 1 al 4: ").strip()
+    return opcion
+
+
+def pausa():
+    input("\nPresiona Enter para volver al menu...")
+
+def mostrar_opciones(lista):
+    for i in range(len(lista)):
+        print(f"  {i} = {lista[i]}")
+
+#############################################################################
 
 ################################ Validaciones ################################
 def validar_Datos_Mayores_0(dato):
@@ -52,6 +80,11 @@ def validar_clima(dato):
 def validar_Dia(dato):
     while dato < 0 or dato > 6:
         dato = int(input("El dia debe estar entre 0 (lunes) y 6 (domingo): "))
+    return dato
+
+def validar_Rango(dato, minimo, maximo):
+    while dato < minimo or dato > maximo:
+        dato = float(input(f"El dato debe estar entre {minimo} y {maximo}: "))
     return dato
 ################################ Fin de Validaciones ################################
 
@@ -170,6 +203,7 @@ def alertas(Base_de_Datos, modelo, desviacion, visibilidadCarretera, precipitaci
             print("Alerta critica")
     return alerta
 
+############################Grafica#############################################
 def graficar_perfil_hora(Base_de_Datos, cruze, hora_actual, autos_actuales):
     horas = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24]
     promedios = []
@@ -212,53 +246,115 @@ def graficar_volumen_velocidad(Base_de_Datos, cruze):
     plt.legend()
     plt.tight_layout()
     plt.show()
+#################################################################################333
+
 
 def main():
+    CRUCES = ["Jl. Sudirman - Bundaran HI", "Jl. Thamrin - Monas", "Jl. Rasuna Said - Setiabudi", "Jl. Satrio - Mega Kuningan", "Jl. Jend. Gatot Subroto - Slipi"]
+    CLIMAS = ["Parcialmente nublado", "Nublado", "Lluvia ligera", "Lluvia moderada", "Lluvia intensa", "Tormenta", "Niebla"]
     print("Este programa en base a una base de datos permite a un semaforo tomar decisiones")
     Base_de_Datos = cargar_datos()
     modelo, desviacion = cargar_modelo()
+    observaciones=[]
 
-    mensaje = ""
-    visibilidadCarretera = float(input("Cual es la visibilidad de la carretera: "))
-    precipitacionCarretera = float(input("Cual es la precipitacion de la carretera: "))
-    congestionCarretera = int(input("Cuanto coches hay en la carretera: "))
-    velocidadCarretera = float(input("Cual es la velocidad promedio de los carros (km/h): "))
-    horaCarretera = int(input("Que hora es: "))
-    diaCarretera = int(input("Que dia en numero es: "))
-    cruzeCarretera = input("En que cruze estas: ")
-    climaCarretera = input("Que clima hay: ")
+    while True:
+    
+        #GUARDAR LA VARIABLE DEVUELTA POR LA FUNCIÓN MENU
+        opcion=menu()
 
-    velocidadCarretera = validar_Datos_Mayores_0(velocidadCarretera)
-    visibilidadCarretera = validar_Datos_Mayores_0(visibilidadCarretera)
-    precipitacionCarretera = validar_Datos_Mayores_0(precipitacionCarretera)
-    congestionCarretera = validar_Datos_Mayores_0(congestionCarretera)
-    horaCarretera = validar_Hora(horaCarretera)
-    cruzeCarretera = validar_cruze(cruzeCarretera)
-    climaCarretera = validar_clima(climaCarretera)
-    diaCarretera = validar_Dia(diaCarretera)
+        while not opcion in ["1","2","3","4"]:
+            print("Opcion incorrecta, ingrese de nuevo")
+            opcion=menu()
+        
 
-    print("\n--- EVALUACION ACTUAL ---")
-    nivel_alerta = alertas(
-        Base_de_Datos, modelo, desviacion,
-        visibilidadCarretera, precipitacionCarretera,
-        congestionCarretera, velocidadCarretera,
-        horaCarretera, diaCarretera, cruzeCarretera, climaCarretera
-    )
+        match opcion:
 
-    print("\n--- INFORME FUTURO ---")
-    hora_final = min(horaCarretera + 1, 23)
-    informe_futuro(Base_de_Datos, modelo, diaCarretera, horaCarretera, hora_final, cruzeCarretera, climaCarretera)
+            case "1":
+                
+                visibilidadCarretera = float(input("Cual es la visibilidad de la carretera (0 a 15 km): "))
+                visibilidadCarretera = validar_Rango(visibilidadCarretera, 0, 15)
 
-    if input("Quiere el usuario ingresar algun mensaje de alerta(s/n): ") == "s":
-        mensaje = input("Cual es el mensaje: ")
-        alerta += 1
+                precipitacionCarretera = float(input("Cual es la precipitacion de la carretera (0 a 50 mm): "))
+                precipitacionCarretera = validar_Rango(precipitacionCarretera, 0, 50)
+                
+                congestionCarretera = int(input("Cuanto coches hay en la carretera: "))
+                congestionCarretera = validar_Datos_Mayores_0(congestionCarretera)
 
-    if mensaje:
-        print(f"El usuario reporto: {mensaje}")
+                velocidadCarretera = float(input("Cual es la velocidad promedio de los carros (km/h): "))
+                velocidadCarretera = validar_Datos_Mayores_0(velocidadCarretera)
 
-    print(f"Hay un nivel de alerta de {alerta}")
+                horaCarretera = int(input("Que hora es: "))
+                horaCarretera = validar_Hora(horaCarretera)
+                
+                diaCarretera = int(input("Que dia en numero es: "))
+                diaCarretera = validar_Dia(diaCarretera)    
+                
+                print("Cruces disponibles:")
+                mostrar_opciones(CRUCES)
+                cruzeCarretera = int(input("En que cruze estas (0-4): "))
+                cruzeCarretera = validar_cruze(cruzeCarretera)
+                
+                print("Climas disponibles:")
+                mostrar_opciones(CLIMAS)
+                climaCarretera = int(input("Que clima hay (0-6): "))
+                climaCarretera = validar_clima(climaCarretera)
 
-    graficar_perfil_hora(Base_de_Datos, cruzeCarretera, horaCarretera, congestionCarretera)
-    graficar_volumen_velocidad(Base_de_Datos, cruzeCarretera)
+                print()
+                print("="*25)
+                print("--- EVALUACION ACTUAL ---")
+                nivel_alerta = alertas(
+                        Base_de_Datos, modelo, desviacion,
+                        visibilidadCarretera, precipitacionCarretera,
+                        congestionCarretera, velocidadCarretera,
+                        horaCarretera, diaCarretera, cruzeCarretera, climaCarretera, observaciones
+                        )
+                graficar_perfil_hora(Base_de_Datos, cruzeCarretera, horaCarretera, congestionCarretera)
+                graficar_volumen_velocidad(Base_de_Datos, cruzeCarretera)
+                plt.show()
+
+                pausa()
+
+            case "2":
+                horaCarretera = int(input("Que hora es: "))
+                horaCarretera = validar_Hora(horaCarretera)
+
+                diaCarretera = int(input("Que dia en numero es: "))
+                diaCarretera = validar_Dia(diaCarretera)
+
+                print("Cruces disponibles:")
+                mostrar_opciones(CRUCES)
+                cruzeCarretera = int(input("En que cruze estas (0-4): "))
+                cruzeCarretera = validar_cruze(cruzeCarretera)
+                
+                print("Climas disponibles:")
+                mostrar_opciones(CLIMAS)
+                climaCarretera = int(input("Que clima hay (0-6): "))
+                climaCarretera = validar_clima(climaCarretera)
+
+                print("\n--- INFORME FUTURO ---")
+                hora_final = min(horaCarretera + 1, 23)
+                informe_futuro(Base_de_Datos, modelo, diaCarretera, horaCarretera, hora_final, cruzeCarretera, climaCarretera)
+                pausa()
+
+            case "3":
+                
+                
+                mensaje = input("Cual es el mensaje de alerta: ")
+
+                while mensaje=="":
+                    print("Error, no puede dejar el espacio en blanco")
+                    mensaje = input("Cual es el mensaje de alerta: ")
+
+                observaciones.append(mensaje)
+                print(f"Alerta registrada: {mensaje}")
+                print(f"Alertas reportadas por el usuario: {len(observaciones)}")
+
+                pausa()
+
+
+            case "4":
+                print("PROGRAMA CERRADO")
+                print("Maneje con cuidado")
+                break
 
 main()
