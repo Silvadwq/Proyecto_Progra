@@ -285,11 +285,11 @@ def main():
         while not opcion in ["1","2","3","4"]:
             print("Opcion incorrecta, ingrese de nuevo")
             opcion=menu()
-        
 
+        #Aqui esta el menu
         match opcion:
 
-            case "1":
+            case "1":#Informe actual, reporte y graficas
                 
                 visibilidadCarretera = float(input("Cual es la visibilidad de la carretera (0 a 15 km): "))
                 visibilidadCarretera = validar_Rango(visibilidadCarretera, 0, 15)
@@ -336,7 +336,7 @@ def main():
 
                 pausa()
 
-            case "2":
+            case "2":#Prediccion de las proximas dos horas
                 horaCarretera = int(input("Que hora es: "))
                 horaCarretera = validar_Hora(horaCarretera)
 
@@ -359,7 +359,7 @@ def main():
                 informe_futuro(Base_de_Datos, modelo, diaCarretera, horaCarretera, hora_final, cruzeCarretera, climaCarretera)
                 pausa()
 
-            case "3":
+            case "3":#Registrar una observacion a mano
                 
                 
                 mensaje = input("Cual es el mensaje de alerta: ")
@@ -375,7 +375,7 @@ def main():
                 pausa()
 
 
-            case "4":
+            case "4":#Salir del programa
                 print("PROGRAMA CERRADO")
                 print("Maneje con cuidado")
                 break
