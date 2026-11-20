@@ -4,6 +4,9 @@ import statsmodels.formula.api as smf
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 
+CRUCES = ["Jl. Sudirman - Bundaran HI", "Jl. Thamrin - Monas", "Jl. Rasuna Said - Setiabudi", "Jl. Satrio - Mega Kuningan", "Jl. Jend. Gatot Subroto - Slipi"]
+CLIMAS = ["Parcialmente nublado", "Nublado", "Lluvia ligera", "Lluvia moderada", "Lluvia intensa", "Tormenta", "Niebla"]
+
 def cargar_datos():
     Base_de_Datos = []
     with open("trafico_5_cruces_2024Q1.csv", mode='r', encoding='utf-8') as f:
@@ -50,6 +53,10 @@ def menu():
 def pausa():
     input("\nPresiona Enter para volver al menu...")
 
+def mostrar_opciones(lista):
+    for i in range(len(lista)):
+        print(f"  {i} = {lista[i]}")
+
 def clima_adverso(Base_de_Datos,hora,cruze):
      contador = 0
      promedio_precipitacion = 0
@@ -80,6 +87,12 @@ def congestionAutos(Base_de_Datos,hora,cruze):
     promedio_autos = promedio_autos / contador
     return promedio_autos, promedio_velocidad
 
+
+def validar_Rango(dato, minimo, maximo):
+    while dato < minimo or dato > maximo:
+        dato = float(input(f"El dato debe estar entre {minimo} y {maximo}: "))
+    return dato
+
 def validar_Datos_Mayores_0(dato):
      while dato < 0:
           dato = float(input("El dato tiene que ser mayor a 0: "))
@@ -89,17 +102,15 @@ def validar_Hora(dato):
           dato = int(input("La hora debe estar entre 0 y 23:"))
      return dato
 def validar_cruze(dato):
-    cruces = ["Jl. Sudirman - Bundaran HI", "Jl. Thamrin - Monas", "Jl. Rasuna Said - Setiabudi", "Jl. Satrio - Mega Kuningan", "Jl. Jend. Gatot Subroto - Slipi"]
-    opcion=cruces[dato]
-    while opcion not in cruces:
-        dato = input("El cruce es incorrecto, ingrésalo de nuevo: ")
-    return cruces[dato]
+    while dato < 0 or dato > 4:
+        dato = int(input("El cruce debe ser un numero de 0 a 4: "))
+    return CRUCES[dato]
 
 def validar_clima(dato):
-    climas = ["Parcialmente nublado", "Nublado", "Lluvia ligera", "Lluvia moderada", "Lluvia intensa", "Tormenta", "Niebla"]
-    while dato not in climas:
-        dato = input("El clima es incorrecto, ingrésalo de nuevo: ")
-    return dato
+    while dato < 0 or dato > 6:
+    
+        dato = int(input("El clima debe ser un numero de 0 a 6: "))
+    return CLIMAS[dato]
 
 def validar_Dia(dato):
     while dato < 0 or dato > 6:
@@ -173,17 +184,17 @@ def alertas(Base_de_Datos, modelo, desviacion, visibilidadCarretera, precipitaci
 
     exp = esperado(modelo, horaCarretera, diaCarretera, precipitacionCarretera, climaCarretera)
     if congestionCarretera > exp + 2 * desviacion:
-        print("Congestion anormal, se esperaban unos", round(exp))
+        print("Congestion anormal, se esperaban unos", round(exp), "carros")
     elif congestionCarretera < exp - 2 * desviacion:
         print("Lectura sospechosa, posible falla del sensor")
     else:
-        print("Trafico normal, se esperaban unos", round(exp))
+        print("Trafico normal, se esperaban unos", round(exp), "carros")
 
     match alerta:
         case 0:
             print("Condiciones normales, mantener horario habitual del semaforo.")
         case 1:
-            print("Cuidado")
+            print("Se registro una alerta, se debe tener precaución")
         case 2:
             print("Que el semaforo dure menos en verde")
         case 3:
@@ -193,7 +204,7 @@ def alertas(Base_de_Datos, modelo, desviacion, visibilidadCarretera, precipitaci
     return alerta
 
 def graficar_perfil_hora(Base_de_Datos, cruze, hora_actual, autos_actuales):
-    horas = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24]
+    horas = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23]
     promedios = []
     for h in horas:
         prom_autos, _ = congestionAutos(Base_de_Datos, h, cruze)
@@ -255,11 +266,11 @@ def main():
 
             case "1":
                 
-                visibilidadCarretera = float(input("Cual es la visibilidad de la carretera: "))
-                visibilidadCarretera = validar_Datos_Mayores_0(visibilidadCarretera)
-                
-                precipitacionCarretera = float(input("Cual es la precipitacion de la carretera: "))
-                precipitacionCarretera = validar_Datos_Mayores_0(precipitacionCarretera)
+                visibilidadCarretera = float(input("Cual es la visibilidad de la carretera (0 a 15 km): "))
+                visibilidadCarretera = validar_Rango(visibilidadCarretera, 0, 15)
+
+                precipitacionCarretera = float(input("Cual es la precipitacion de la carretera (0 a 50 mm): "))
+                precipitacionCarretera = validar_Rango(precipitacionCarretera, 0, 50)
                 
                 congestionCarretera = int(input("Cuanto coches hay en la carretera: "))
                 congestionCarretera = validar_Datos_Mayores_0(congestionCarretera)
@@ -271,12 +282,16 @@ def main():
                 horaCarretera = validar_Hora(horaCarretera)
                 
                 diaCarretera = int(input("Que dia en numero es: "))
-                diaCarretera = validar_Datos_Mayores_0(diaCarretera)    
+                diaCarretera = validar_Dia(diaCarretera)    
                 
-                cruzeCarretera = int(input("En que cruze estas: "))
+                print("Cruces disponibles:")
+                mostrar_opciones(CRUCES)
+                cruzeCarretera = int(input("En que cruze estas (0-4): "))
                 cruzeCarretera = validar_cruze(cruzeCarretera)
                 
-                climaCarretera = input("Que clima hay: ")
+                print("Climas disponibles:")
+                mostrar_opciones(CLIMAS)
+                climaCarretera = int(input("Que clima hay (0-6): "))
                 climaCarretera = validar_clima(climaCarretera)
 
                 print()
@@ -299,12 +314,16 @@ def main():
                 horaCarretera = validar_Hora(horaCarretera)
 
                 diaCarretera = int(input("Que dia en numero es: "))
-                diaCarretera = validar_Datos_Mayores_0(diaCarretera)
+                diaCarretera = validar_Dia(diaCarretera)
 
-                cruzeCarretera = int(input("En que cruze estas: "))
+                print("Cruces disponibles:")
+                mostrar_opciones(CRUCES)
+                cruzeCarretera = int(input("En que cruze estas (0-4): "))
                 cruzeCarretera = validar_cruze(cruzeCarretera)
                 
-                climaCarretera = input("Que clima hay: ")
+                print("Climas disponibles:")
+                mostrar_opciones(CLIMAS)
+                climaCarretera = int(input("Que clima hay (0-6): "))
                 climaCarretera = validar_clima(climaCarretera)
 
                 print("\n--- INFORME FUTURO ---")
