@@ -1,3 +1,11 @@
+"""
+Hecho por:
+Diego Yael Silva Medina A01649786
+Martin Alejandro Mosquera Montufar A01985797
+Jose Manuel Ramirez Viveros A01649926
+
+"""
+
 #Importamos las librerias
 import csv
 import pandas as pd
