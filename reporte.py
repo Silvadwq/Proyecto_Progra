@@ -182,23 +182,22 @@ def alertas(Base_de_Datos, modelo, desviacion, visibilidadCarretera, precipitaci
 
     exp = esperado(modelo, horaCarretera, diaCarretera, precipitacionCarretera, climaCarretera)
     if congestionCarretera > exp + 2 * desviacion:
-        print("Congestion anormal, se esperaban unos", round(exp))
+        print(f"Congestion anormal: se detectaron {congestionCarretera} carros y se esperaban unos {round(exp)} carros.")
     elif congestionCarretera < exp - 2 * desviacion:
-        print("Lectura sospechosa, posible falla del sensor")
+        print(f"Lectura sospechosa (posible falla del sensor): se detectaron {congestionCarretera} carros y se esperaban unos {round(exp)} carros.")
+        print("Recomendacion: Mantener horario fijo del semaforo y revisar el sensor.")
     else:
-        print("Trafico normal, se esperaban unos", round(exp))
+        print(f"Trafico normal: se esperaban unos {round(exp)} carros.")
 
     match alerta:
         case 0:
             print("Condiciones normales, mantener horario habitual del semaforo.")
         case 1:
-            print("Cuidado")
+            print("Debido a condiciones atmosfericas el semaforo debe durar 10 segunndos mas en rojo")
         case 2:
-            print("Que el semaforo dure menos en verde")
-        case 3:
-            print("Que el semaforo dure mas en rojo")
+            print("Debido a condiciones atmosfericas el semaforo debe durar 20 segunndos mas en rojo")
         case _:
-            print("Alerta critica")
+            print("Error de alerta")
     return alerta
 
 ############################Grafica#############################################
