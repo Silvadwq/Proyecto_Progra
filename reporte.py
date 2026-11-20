@@ -27,6 +27,62 @@ def cargar_datos():
                      print("No cargo bien")
     return Base_de_Datos
 
+
+################################ Validaciones ################################
+def validar_Datos_Mayores_0(dato):
+     while dato < 0:
+          dato = float(input("El dato tiene que ser mayor a 0: "))
+     return dato
+def validar_Hora(dato):
+     while dato < 0 or dato > 23:
+          dato = int(input("La hora debe estar entre 0 y 23:"))
+     return dato
+def validar_cruze(dato):
+    cruces = ["Jl. Sudirman - Bundaran HI", "Jl. Thamrin - Monas", "Jl. Rasuna Said - Setiabudi", "Jl. Satrio - Mega Kuningan", "Jl. Jend. Gatot Subroto - Slipi"]
+    while dato not in cruces:
+        dato = input("El cruce es incorrecto, ingrésalo de nuevo: ")
+    return dato
+
+def validar_clima(dato):
+    climas = ["Parcialmente nublado", "Nublado", "Lluvia ligera", "Lluvia moderada", "Lluvia intensa", "Tormenta", "Niebla"]
+    while dato not in climas:
+        dato = input("El clima es incorrecto, ingrésalo de nuevo: ")
+    return dato
+
+def validar_Dia(dato):
+    while dato < 0 or dato > 6:
+        dato = int(input("El dia debe estar entre 0 (lunes) y 6 (domingo): "))
+    return dato
+################################ Fin de Validaciones ################################
+
+######################################      Modelo  #########################
+def cargar_modelo():
+
+    datos = pd.read_csv("trafico_5_cruces_2024Q1.csv")
+    d_hora = pd.get_dummies(datos["hora"], prefix="hora", dtype=int).drop(columns="hora_0")
+    d_dia = pd.get_dummies(datos["dia_semana"], prefix="dia", dtype=int).drop(columns="dia_0")
+    d_clima = pd.get_dummies(datos["clima"], prefix="clima", dtype=int).drop(columns="clima_Parcialmente nublado")
+    tabla = pd.concat([datos[["precipitacion_mm", "vehiculos"]], d_hora, d_dia, d_clima], axis=1)
+    entrenamiento, test = train_test_split(tabla, test_size=0.2, random_state=42)
+    variables = [c for c in entrenamiento.columns if c != "vehiculos"]
+    formula = "vehiculos ~ " + " + ".join('Q("' + c + '")' for c in variables)
+    modelo = smf.ols(formula=formula, data=entrenamiento).fit()
+    return modelo, modelo.resid.std()
+
+
+def esperado(modelo, hora, dia, lluvia, clima):
+    total = modelo.params["Intercept"]
+    total = total + modelo.params['Q("precipitacion_mm")'] * lluvia
+    if hora != 0:
+        total = total + modelo.params['Q("hora_' + str(hora) + '")']
+    if dia != 0:
+        total = total + modelo.params['Q("dia_' + str(dia) + '")']
+    if clima != "Parcialmente nublado":
+        total = total + modelo.params['Q("clima_' + clima + '")']
+    return total
+###############################Fin modelo #######################
+
+########################### Promedios y cosas ####################################
 def clima_adverso(Base_de_Datos,hora,cruze):
      contador = 0
      promedio_precipitacion = 0
@@ -57,57 +113,8 @@ def congestionAutos(Base_de_Datos,hora,cruze):
     promedio_autos = promedio_autos / contador
     return promedio_autos, promedio_velocidad
 
-def validar_Datos_Mayores_0(dato):
-     while dato < 0:
-          dato = float(input("El dato tiene que ser mayor a 0: "))
-     return dato
-def validar_Hora(dato):
-     while dato < 0 or dato > 23:
-          dato = int(input("La hora debe estar entre 0 y 23:"))
-     return dato
-def validar_cruze(dato):
-    cruces = ["Jl. Sudirman - Bundaran HI", "Jl. Thamrin - Monas", "Jl. Rasuna Said - Setiabudi", "Jl. Satrio - Mega Kuningan", "Jl. Jend. Gatot Subroto - Slipi"]
-    while dato not in cruces:
-        dato = input("El cruce es incorrecto, ingrésalo de nuevo: ")
-    return dato
+##########################################################################3
 
-def validar_clima(dato):
-    climas = ["Parcialmente nublado", "Nublado", "Lluvia ligera", "Lluvia moderada", "Lluvia intensa", "Tormenta", "Niebla"]
-    while dato not in climas:
-        dato = input("El clima es incorrecto, ingrésalo de nuevo: ")
-    return dato
-
-def validar_Dia(dato):
-    while dato < 0 or dato > 6:
-        dato = int(input("El dia debe estar entre 0 (lunes) y 6 (domingo): "))
-    return dato
-
-######################################      Modelo  #########################
-def cargar_modelo():
-
-    datos = pd.read_csv("trafico_5_cruces_2024Q1.csv")
-    d_hora = pd.get_dummies(datos["hora"], prefix="hora", dtype=int).drop(columns="hora_0")
-    d_dia = pd.get_dummies(datos["dia_semana"], prefix="dia", dtype=int).drop(columns="dia_0")
-    d_clima = pd.get_dummies(datos["clima"], prefix="clima", dtype=int).drop(columns="clima_Parcialmente nublado")
-    tabla = pd.concat([datos[["precipitacion_mm", "vehiculos"]], d_hora, d_dia, d_clima], axis=1)
-    entrenamiento, test = train_test_split(tabla, test_size=0.2, random_state=42)
-    variables = [c for c in entrenamiento.columns if c != "vehiculos"]
-    formula = "vehiculos ~ " + " + ".join('Q("' + c + '")' for c in variables)
-    modelo = smf.ols(formula=formula, data=entrenamiento).fit()
-    return modelo, modelo.resid.std()
-
-
-def esperado(modelo, hora, dia, lluvia, clima):
-    total = modelo.params["Intercept"]
-    total = total + modelo.params['Q("precipitacion_mm")'] * lluvia
-    if hora != 0:
-        total = total + modelo.params['Q("hora_' + str(hora) + '")']
-    if dia != 0:
-        total = total + modelo.params['Q("dia_' + str(dia) + '")']
-    if clima != "Parcialmente nublado":
-        total = total + modelo.params['Q("clima_' + clima + '")']
-    return total
-###############################Fin modelo #######################
 def informe_futuro(Base_de_Datos, modelo, dia, hora_inicial, hora_final, cruze, clima):
     print(f"Informe del dia {dia} de {hora_inicial}:00 a {hora_final}:00 en {cruze}:")
     total = 0
@@ -211,6 +218,7 @@ def main():
     Base_de_Datos = cargar_datos()
     modelo, desviacion = cargar_modelo()
 
+    mensaje = ""
     visibilidadCarretera = float(input("Cual es la visibilidad de la carretera: "))
     precipitacionCarretera = float(input("Cual es la precipitacion de la carretera: "))
     congestionCarretera = int(input("Cuanto coches hay en la carretera: "))
@@ -240,6 +248,15 @@ def main():
     print("\n--- INFORME FUTURO ---")
     hora_final = min(horaCarretera + 1, 23)
     informe_futuro(Base_de_Datos, modelo, diaCarretera, horaCarretera, hora_final, cruzeCarretera, climaCarretera)
+
+    if input("Quiere el usuario ingresar algun mensaje de alerta(s/n): ") == "s":
+        mensaje = input("Cual es el mensaje: ")
+        alerta += 1
+
+    if mensaje:
+        print(f"El usuario reporto: {mensaje}")
+
+    print(f"Hay un nivel de alerta de {alerta}")
 
     graficar_perfil_hora(Base_de_Datos, cruzeCarretera, horaCarretera, congestionCarretera)
     graficar_volumen_velocidad(Base_de_Datos, cruzeCarretera)
